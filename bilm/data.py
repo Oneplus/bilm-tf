@@ -1,24 +1,21 @@
 # originally based on https://github.com/tensorflow/models/tree/master/lm_1b
 import glob
 import random
-
 import numpy as np
-
 from typing import List
 
 
-
 class Vocabulary(object):
-    '''
+    """
     A token vocabulary.  Holds a map from token to ids and provides
     a method for encoding text to a sequence of ids.
-    '''
+    """
     def __init__(self, filename, validate_file=False):
-        '''
+        """
         filename = the vocabulary file.  It is a flat text file with one
             (normalized) token per line.  In addition, the file should also
             contain the special tokens <S>, </S>, <UNK> (case sensitive).
-        '''
+        """
         self._id_to_word = []
         self._word_to_id = {}
         self._unk = -1
@@ -169,9 +166,9 @@ class UnicodeCharsVocabulary(Vocabulary):
             return self._convert_word_to_char_ids(word)
 
     def encode_chars(self, sentence, reverse=False, split=True):
-        '''
+        """
         Encode the sentence as a white space delimited string of tokens.
-        '''
+        """
         if split:
             chars_ids = [self.word_to_char_ids(cur_word)
                      for cur_word in sentence.split()]
@@ -185,9 +182,9 @@ class UnicodeCharsVocabulary(Vocabulary):
 
 
 class Batcher(object):
-    ''' 
+    """
     Batch sentences of tokenized text into character id matrices.
-    '''
+    """
     def __init__(self, lm_vocab_file: str, max_token_length: int):
         '''
         lm_vocab_file = the language model vocabulary file (one line per
@@ -200,11 +197,11 @@ class Batcher(object):
         self._max_token_length = max_token_length
 
     def batch_sentences(self, sentences: List[List[str]]):
-        '''
+        """
         Batch the sentences as character ids
         Each sentence is a list of tokens without <s> or </s>, e.g.
         [['The', 'first', 'sentence', '.'], ['Second', '.']]
-        '''
+        """
         n_sentences = len(sentences)
         max_length = max(len(sentence) for sentence in sentences) + 2
 
@@ -224,9 +221,9 @@ class Batcher(object):
 
 
 class TokenBatcher(object):
-    ''' 
+    """
     Batch sentences of tokenized text into token id matrices.
-    '''
+    """
     def __init__(self, lm_vocab_file: str):
         '''
         lm_vocab_file = the language model vocabulary file (one line per
@@ -235,11 +232,11 @@ class TokenBatcher(object):
         self._lm_vocab = Vocabulary(lm_vocab_file)
 
     def batch_sentences(self, sentences: List[List[str]]):
-        '''
+        """
         Batch the sentences as character ids
         Each sentence is a list of tokens without <s> or </s>, e.g.
         [['The', 'first', 'sentence', '.'], ['Second', '.']]
-        '''
+        """
         n_sentences = len(sentences)
         max_length = max(len(sentence) for sentence in sentences) + 2
 
@@ -306,6 +303,7 @@ def _get_batch(generator, batch_size, num_steps, max_word_length):
 
         yield X
 
+
 class LMDataset(object):
     """
     Hold a language model dataset.
@@ -315,14 +313,14 @@ class LMDataset(object):
     """
     def __init__(self, filepattern, vocab, reverse=False, test=False,
                  shuffle_on_load=False):
-        '''
-        filepattern = a glob string that specifies the list of files.
-        vocab = an instance of Vocabulary or UnicodeCharsVocabulary
-        reverse = if True, then iterate over tokens in each sentence in reverse
-        test = if True, then iterate through all data once then stop.
-            Otherwise, iterate forever.
-        shuffle_on_load = if True, then shuffle the sentences after loading.
-        '''
+        """
+        :param filepattern a glob string that specifies the list of files.
+        :param vocab an instance of Vocabulary or UnicodeCharsVocabulary
+        :param reverse if True, then iterate over tokens in each sentence in reverse
+        :param test if True, then iterate through all data once then stop.
+                    Otherwise, iterate forever.
+        :param shuffle_on_load if True, then shuffle the sentences after loading.
+        """
         self._vocab = vocab
         self._all_shards = glob.glob(filepattern)
         print('Found %d shards at %s' % (len(self._all_shards), filepattern))
@@ -347,7 +345,7 @@ class LMDataset(object):
         if self._test:
             if len(self._all_shards) == 0:
                 # we've loaded all the data
-                # this will propogate up to the generator in get_batch
+                # this will propagate up to the generator in get_batch
                 # and stop iterating
                 raise StopIteration
             else:
@@ -426,11 +424,12 @@ class LMDataset(object):
     def vocab(self):
         return self._vocab
 
+
 class BidirectionalLMDataset(object):
     def __init__(self, filepattern, vocab, test=False, shuffle_on_load=False):
-        '''
+        """
         bidirectional version of LMDataset
-        '''
+        """
         self._data_forward = LMDataset(
             filepattern, vocab, reverse=False, test=test,
             shuffle_on_load=shuffle_on_load)
@@ -452,4 +451,3 @@ class BidirectionalLMDataset(object):
                 X[k + '_reverse'] = v
 
             yield X
-

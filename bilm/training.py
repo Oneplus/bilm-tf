@@ -27,7 +27,7 @@ def print_variable_summary():
 
 
 class LanguageModel(object):
-    '''
+    """
     A class to build the tensorflow computational graph for NLMs
 
     All hyperparameters and model configuration is specified in a dictionary
@@ -50,7 +50,7 @@ class LanguageModel(object):
         'projection_dim' is assumed token embedding size and LSTM output size.
         'dim' is the hidden state size.
         Set 'dim' == 'projection_dim' to skip a projection layer.
-    '''
+    """
     def __init__(self, options, is_training):
         self.options = options
         self.is_training = is_training
@@ -102,7 +102,7 @@ class LanguageModel(object):
                     self.embedding_weights, self.token_ids_reverse)
 
     def _build_word_char_embeddings(self):
-        '''
+        """
         options contains key 'char_cnn': {
 
         'n_characters': 60,
@@ -128,7 +128,7 @@ class LanguageModel(object):
         # if omitted, then no highway layers
         'n_highway': 2,
         }
-        '''
+        """
         batch_size = self.options['batch_size']
         unroll_steps = self.options['unroll_steps']
         projection_dim = self.options['lstm']['projection_dim']
@@ -165,7 +165,6 @@ class LanguageModel(object):
                                    name='tokens_characters_reverse')
                 self.char_embedding_reverse = tf.nn.embedding_lookup(
                     self.embedding_weights, self.tokens_characters_reverse)
-
 
         # the convolutions
         def make_convolutions(inp, reuse):
@@ -682,8 +681,12 @@ def train(options, data, n_gpus, tf_save_dir, tf_log_dir,
 
         # set up the optimizer
         lr = options.get('learning_rate', 0.2)
-        opt = tf.train.AdagradOptimizer(learning_rate=lr,
-                                        initial_accumulator_value=1.0)
+        optim = options.get('optimizer', 'adagrad')
+        if optim == 'adagrad':
+            opt = tf.train.AdagradOptimizer(learning_rate=lr,
+                                            initial_accumulator_value=1.0)
+        else:
+            opt = tf.train.AdamOptimizer()
 
         # calculate the gradients on each GPU
         tower_grads = []
@@ -872,7 +875,6 @@ def train(options, data, n_gpus, tf_save_dir, tf_log_dir,
                 )
                 init_state_values = ret[4:]
                 
-
             if batch_no % 1250 == 0:
                 summary_writer.add_summary(ret[3], batch_no)
             if batch_no % 100 == 0:
